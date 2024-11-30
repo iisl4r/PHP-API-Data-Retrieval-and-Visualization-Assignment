@@ -10,25 +10,36 @@
 </head>
 
 <body>
-
+    <!-- Responsive container -->
     <main class="container my-4">
 
         <header>
+            <!-- H1 TITLE -->
             <h1 class="mb-4">UOB Students Enrolled According To Their Nationalities</h1>
         </header>
 
         <?php
         // API URL
         $URL = "https://data.gov.bh/api/explore/v2.1/catalog/datasets/01-statistics-of-students-nationalities_updated/records?where=colleges%20like%20%22IT%22%20AND%20the_programs%20like%20%22bachelor%22&limit=100";
+        try {
+            // Fetching data
+            $response = file_get_contents($URL);
+            if ($response === FALSE) {
+                throw new Exception("Error fetching data from the API.");
+            }
+            // Decode response to get records
+            $data = json_decode($response, true);
 
-        // Fetching data
-        $response = file_get_contents($URL);
-
-        // Decode response to get records
-        $data = json_decode($response, true);
-        $records = $data['results'];
+            // Check if JSON decoding was successful
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new Exception("Error decoding JSON data: " . json_last_error_msg());
+            }
+            $records = $data['results'] ?? [];
+        } catch (Exception $e) {
+            echo "An error occurred: " . $e->getMessage();
+        }
         ?>
-
+        <!-- Responsive table -->
         <div class="table-responsive">
             <table class="table table-hover table-bordered">
                 <!-- thead -->
@@ -49,15 +60,17 @@
                 <tbody>
                     <?php
                     // Iterate over records
-                    foreach ($records as $record) {
-                        echo '<tr>';
-                        echo '<td>' . $record['year'] . '</td>';
-                        echo '<td>' . $record['semester'] . '</td>';
-                        echo '<td>' . $record['the_programs'] . '</td>';
-                        echo '<td>' . $record['nationality'] . '</td>';
-                        echo '<td>' . $record['colleges'] . '</td>';
-                        echo '<td>' . $record['number_of_students'] . '</td>';
-                        echo '</tr>';
+                    if (!empty($records)) {
+                        foreach ($records as $record) {
+                            echo '<tr>';
+                            echo '<td>' . $record['year'] ?? 'N/A' . '</td>';
+                            echo '<td>' . $record['semester'] ?? 'N/A' . '</td>';
+                            echo '<td>' . $record['the_programs'] ?? 'N/A' . '</td>';
+                            echo '<td>' . $record['nationality'] ?? 'N/A' . '</td>';
+                            echo '<td>' . $record['colleges'] ?? 'N/A' . '</td>';
+                            echo '<td>' . $record['number_of_students'] ?? 'N/A' . '</td>';
+                            echo '</tr>';
+                        }
                     }
                     ?>
                     <!-- tbody end -->
